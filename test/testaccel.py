@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # ADXL345 Python example 
 #
 # author:  Jonathan Williamson
