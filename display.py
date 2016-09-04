@@ -11,6 +11,8 @@ SCREEN_SIZE = (0,0)
 DISPLAYFLAGS = FULLSCREEN | NOFRAME
 #SCALAR = .5
 #SCALAR2 = 0.2
+WHITE = (255,255,255)
+ORIGIN_ANGLEREADOUT = (0,0,-1)
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -40,6 +42,13 @@ def read_values():
     f = urllib.urlopen(link)
     myfile = f.read()
     return myfile.split(" ")
+
+def drawText(position, textString):     
+    font = pygame.font.Font (None, 64)
+    textSurface = font.render(textString, True, (255,255,255,255), (0,0,0,255))     
+    textData = pygame.image.tostring(textSurface, "RGBA", True)     
+    glRasterPos3d(*position)     
+    glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
 
 def run():
     pygame.init()
@@ -108,6 +117,8 @@ def run():
         glRotate(-float(y_angle), 0, 0, 1)
         cube.render()
         glPopMatrix()
+        drawText(ORIGIN_ANGLEREADOUT, "x=" + ("{%.2f}" % float(x_angle)) + ", y=" + ("{%.2f}" % float(y_angle)))
+
         pygame.display.flip()
 
 class Cube(object):

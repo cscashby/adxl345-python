@@ -18,7 +18,6 @@ def get_x_rotation(x,y,z):
     radians = math.atan2(y, dist(x,z))
     return math.degrees(radians)
 
-
 class index:
     def GET(self):
 	adxl345 = ADXL345()
