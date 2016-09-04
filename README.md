@@ -1,3 +1,8 @@
+Prereqs
+=======
+sudo apt-get install sqlite3 python-sqlite
+
+
 adxl345-python
 ==============
 
@@ -22,3 +27,4 @@ or you can run it directly from the command line like this:
     sudo python ADXL345.py
     
 which will output the current x, y, and z axis readings in Gs.
+

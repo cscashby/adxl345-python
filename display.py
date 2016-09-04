@@ -9,10 +9,17 @@ from pygame.locals import *
 
 SCREEN_SIZE = (0,0)
 DISPLAYFLAGS = FULLSCREEN | NOFRAME
-#SCALAR = .5
-#SCALAR2 = 0.2
-WHITE = (255,255,255)
-ORIGIN_ANGLEREADOUT = (0,0,-1)
+# This helps my tiny brain
+GRID_MINX = -2
+GRID_MAXX = 2
+GRID_MINY = -1
+GRID_MAXY = 1
+GRID_MINZ = -1
+GRID_MAXZ = 1
+COLOR_WHITE = (1.0, 1.0, 1.0)
+COLOR_BLACK = (.0, .0, .0)
+COLOR_BLUE = (.5, .5, .7)
+TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -21,10 +28,10 @@ def resize(width, height):
     gluPerspective(45.0, float(width) / height, 0.001, 10.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    gluLookAt(0.0, 1.0, -5.0,
+    gluLookAt(0.0, 0.0, 5.0,
               0.0, 0.0, 0.0,
               0.0, 1.0, 0.0)
-    
+
 def init():
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -37,17 +44,20 @@ def init():
     glEnable(GL_LIGHT0)
     glLightfv(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1.0));
 
-def read_values():
-    link = "http://localhost:8080" # Change this address to your settings
-    f = urllib.urlopen(link)
-    myfile = f.read()
-    return myfile.split(" ")
+def getScreenCoords(position):
+    model = glGetDoublev(GL_MODELVIEW_MATRIX)
+    proj = glGetDoublev(GL_PROJECTION_MATRIX)
+    view = glGetIntegerv(GL_VIEWPORT)
+    return gluProject(position[0], position[1], position[2], model, proj, view)
 
-def drawText(position, textString):     
-    font = pygame.font.Font (None, 64)
+def drawText(position, textString, size):     
+    font = pygame.font.Font (None, size)
     textSurface = font.render(textString, True, (255,255,255,255), (0,0,0,255))     
-    textData = pygame.image.tostring(textSurface, "RGBA", True)     
-    glRasterPos3d(*position)     
+    textData = pygame.image.tostring(textSurface, "RGBA", True)
+    # Size is in window coordinates, so work in that system     
+    screenpos = getScreenCoords(position)
+    centerpos = (screenpos[0] - (textSurface.get_width()/2), screenpos[1], screenpos[2])
+    glWindowPos3d(*centerpos)     
     glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
 
 def run():
@@ -58,34 +68,47 @@ def run():
     resize(*newsize)
     init()
     clock = pygame.time.Clock()
-    cube = Cube((0.0, 0.0, 0.0), (.5, .5, .7))
-    angle = 0
+    backdrop = Backdrop(COLOR_WHITE)
+    cube = Cube((0.0, 0.0, 0.0), COLOR_BLUE)
     
     while True:
         then = pygame.time.get_ticks()
         for event in pygame.event.get():
             if event.type == QUIT:
-                return
+                sys.exit()
             if event.type == KEYUP and event.key == K_ESCAPE:
-                return
+                sys.exit()
 
-        values = read_values()
-        x_angle = values[0]
-        y_angle = values[1]
+        angles = Angles("http://localhost:8080")
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        backdrop.render()
+        glPushMatrix()
+        glRotate(angles.y, 0, 0, -1)
+        cube.render()
+        glPopMatrix()
+        drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64)
 
-        glColor((1.,1.,1.))
+        pygame.display.flip()
+
+class Backdrop(object):
+    def __init__(self, color):
+        self.color = color
+
+    def render(self):
+        then = pygame.time.get_ticks()
+        glColor(self.color)
+
         glLineWidth(1)
         glBegin(GL_LINES)
 
         for x in range(-20, 22, 2):
-            glVertex3f(x/10.,-1,-1)
             glVertex3f(x/10.,-1,1)
+            glVertex3f(x/10.,-1,-1)
         
         for x in range(-20, 22, 2):
-            glVertex3f(x/10.,-1, 1)
-            glVertex3f(x/10., 1, 1)
+            glVertex3f(x/10.,-1, -1)
+            glVertex3f(x/10., 1, -1)
         
         for z in range(-10, 12, 2):
             glVertex3f(-2, -1, z/10.)
@@ -100,26 +123,18 @@ def run():
             glVertex3f( 2,  1, z/10.)
 
         for y in range(-10, 12, 2):
-            glVertex3f(-2, y/10., 1)
-            glVertex3f( 2, y/10., 1)
-        
-        for y in range(-10, 12, 2):
-            glVertex3f(-2, y/10., 1)
             glVertex3f(-2, y/10., -1)
+            glVertex3f( 2, y/10., -1)
         
         for y in range(-10, 12, 2):
-            glVertex3f(2, y/10., 1)
+            glVertex3f(-2, y/10., -1)
+            glVertex3f(-2, y/10., 1)
+        
+        for y in range(-10, 12, 2):
             glVertex3f(2, y/10., -1)
+            glVertex3f(2, y/10., 1)
         
         glEnd()
-        glPushMatrix()
-        glRotate(float(x_angle), 1, 0, 0)
-        glRotate(-float(y_angle), 0, 0, 1)
-        cube.render()
-        glPopMatrix()
-        drawText(ORIGIN_ANGLEREADOUT, "x=" + ("{%.2f}" % float(x_angle)) + ", y=" + ("{%.2f}" % float(y_angle)))
-
-        pygame.display.flip()
 
 class Cube(object):
 
@@ -170,6 +185,17 @@ class Cube(object):
             glVertex(vertices[v3])
             glVertex(vertices[v4])
         glEnd()
+
+class Angles:
+    def __init__( self, url ):
+        link = "http://localhost:8080/" # Change this address to your settings
+        f = urllib.urlopen(link)
+        myfile = f.read()
+        angles = myfile.split(" ")
+        self.x = float(angles[0])
+        self.y = float(angles[1])
+        # This version is for constrained tilt (i.e. pitch only)
+        self.tilt = abs(float(angles[1]))
 
 if __name__ == "__main__":
     run()
