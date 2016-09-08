@@ -2,6 +2,8 @@
 
 import pygame
 import urllib
+import sys
+import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
@@ -20,6 +22,10 @@ COLOR_WHITE = (1.0, 1.0, 1.0)
 COLOR_BLACK = (.0, .0, .0)
 COLOR_BLUE = (.5, .5, .7)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
+TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
+TEXTOFFSET_INPUTS = (0, -0.3, 0)
+
+debug = True
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -60,6 +66,48 @@ def drawText(position, textString, size):
     glWindowPos3d(*centerpos)     
     glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
 
+def exit():
+    pygame.quit()
+    sys.exit(0)
+
+def getText(origin, titleText):
+    inputting = True
+    inputValue = ""
+    while inputting:
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        drawText(origin, titleText, 32)
+        drawText(np.add(origin,TEXTOFFSET_INPUTS), inputValue, 32)
+        pygame.display.flip()
+
+        then = pygame.time.get_ticks()
+        for event in pygame.event.get():
+            if event.type == KEYDOWN and event.key == K_RETURN:
+                inputting = False
+                return inputValue
+            if event.type == KEYDOWN and event.key == K_ESCAPE:
+                inputting = False
+                return ""
+            if event.type == KEYDOWN:
+                inputValue = inputValue + event.unicode
+
+def newUser():
+    if debug:
+        print("New user requested")
+    userName = getText(TEXTORIGIN_INPUTS, "New user - initials?")
+    print(userName)
+    if userName == "":
+        return
+    email = getText(TEXTORIGIN_INPUTS, "User " + userName + " - email?")
+    print(email)
+    if email == "":
+        return
+    initials = getText(TEXTORIGIN_INPUTS, "User " + userName + " - Bottle markings?")
+    print(initials)
+    if initials == "":
+        return
+    print("saving...")
+    # TODO
+
 def run():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE, HWSURFACE | OPENGL | DOUBLEBUF | DISPLAYFLAGS)
@@ -75,9 +123,11 @@ def run():
         then = pygame.time.get_ticks()
         for event in pygame.event.get():
             if event.type == QUIT:
-                sys.exit()
-            if event.type == KEYUP and event.key == K_ESCAPE:
-                sys.exit()
+                exit()
+            if event.type == KEYDOWN and event.key == K_ESCAPE:
+                exit()
+            if event.type == KEYDOWN and event.key == K_n:
+                newUser()
 
         angles = Angles("http://localhost:8080")
 
