@@ -117,7 +117,7 @@ def run():
     info = pygame.display.Info()
     if debug:
         print("Screen width %d, Height %d" % (info.current_w, info.current_h))
-    if info.current_w < 800:
+    if info.current_w <= 800:
         DISPLAY_FLAGS = DISPLAY_FLAGS | FULLSCREEN | NOFRAME
     else:
         SCREEN_SIZE = [800, 600]
