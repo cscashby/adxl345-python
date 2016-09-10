@@ -3,14 +3,15 @@
 import pygame
 import urllib
 import sys
+import threading
+import time
 import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
 from pygame.locals import *
 
-SCREEN_SIZE = (0,0)
-DISPLAYFLAGS = FULLSCREEN | NOFRAME
+SERVER_URL = "http://pi-dir:8080/"
 # This helps my tiny brain
 GRID_MINX = -2
 GRID_MAXX = 2
@@ -24,6 +25,7 @@ COLOR_BLUE = (.5, .5, .7)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
+ANGLE_WAITTIME = 0.1
 
 debug = True
 
@@ -110,15 +112,26 @@ def newUser():
 
 def run():
     pygame.init()
-    screen = pygame.display.set_mode(SCREEN_SIZE, HWSURFACE | OPENGL | DOUBLEBUF | DISPLAYFLAGS)
+    DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
+    SCREEN_SIZE = [0,0]
     info = pygame.display.Info()
-    newsize = (info.current_w, info.current_h)
+    if debug:
+        print("Screen width %d, Height %d" % (info.current_w, info.current_h))
+    if info.current_w < 800:
+        DISPLAY_FLAGS = DISPLAY_FLAGS | FULLSCREEN | NOFRAME
+    else:
+        SCREEN_SIZE = [800, 600]
+    screen = pygame.display.set_mode( SCREEN_SIZE, DISPLAY_FLAGS )
+    newsize = (min(info.current_w, 800), min(info.current_h,600))
     resize(*newsize)
     init()
     clock = pygame.time.Clock()
     backdrop = Backdrop(COLOR_WHITE)
     cube = Cube((0.0, 0.0, 0.0), COLOR_BLUE)
-    
+
+    angles = Angles(SERVER_URL)
+    angles.start()
+
     while True:
         then = pygame.time.get_ticks()
         for event in pygame.event.get():
@@ -128,8 +141,6 @@ def run():
                 exit()
             if event.type == KEYDOWN and event.key == K_n:
                 newUser()
-
-        angles = Angles("http://localhost:8080")
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
@@ -236,16 +247,30 @@ class Cube(object):
             glVertex(vertices[v4])
         glEnd()
 
-class Angles:
+LOCK_ANGLES = threading.Lock()
+
+class Angles(threading.Thread):
     def __init__( self, url ):
-        link = "http://localhost:8080/" # Change this address to your settings
-        f = urllib.urlopen(link)
+        threading.Thread.__init__(self)
+        self.link = url
+        self.daemon = True
+        self.update()
+
+    def run(self):
+        while True:
+            self.update()
+            time.sleep(ANGLE_WAITTIME)
+    
+    def update(self):
+        LOCK_ANGLES.acquire()
+        f = urllib.urlopen(self.link)
         myfile = f.read()
         angles = myfile.split(" ")
         self.x = float(angles[0])
         self.y = float(angles[1])
         # This version is for constrained tilt (i.e. pitch only)
         self.tilt = abs(float(angles[1]))
+        LOCK_ANGLES.release()
 
 if __name__ == "__main__":
     run()
