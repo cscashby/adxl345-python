@@ -22,12 +22,27 @@ GRID_MAXZ = 1
 COLOR_WHITE = (1.0, 1.0, 1.0)
 COLOR_BLACK = (.0, .0, .0)
 COLOR_BLUE = (.5, .5, .7)
+# RGBA format for Font.render
+RGBA_WHITE = (255,255,255,255)
+RGBA_BLACK = (0,0,0,255)
+RGBA_RED = (255,0,0,255)
+RGBA_ORANGE = (255,128,0,255)
+RGBA_GREEN = (0,255,0,255)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
+TEXTORIGIN_GAMENAME = (GRID_MINX,GRID_MINY - 0.46,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
 ANGLE_WAITTIME = 0.1
 
+ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
+ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
+
+currentUser = "No current game"
+currentScore = 0.0
+
 debug = True
+
+paused = False
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -58,14 +73,17 @@ def getScreenCoords(position):
     view = glGetIntegerv(GL_VIEWPORT)
     return gluProject(position[0], position[1], position[2], model, proj, view)
 
-def drawText(position, textString, size):     
+def drawText(position, textString, size, centered = True, color = RGBA_WHITE, background = RGBA_BLACK):     
     font = pygame.font.Font (None, size)
-    textSurface = font.render(textString, True, (255,255,255,255), (0,0,0,255))     
+    textSurface = font.render(textString, True, color, background)     
     textData = pygame.image.tostring(textSurface, "RGBA", True)
     # Size is in window coordinates, so work in that system     
     screenpos = getScreenCoords(position)
-    centerpos = (screenpos[0] - (textSurface.get_width()/2), screenpos[1], screenpos[2])
-    glWindowPos3d(*centerpos)     
+    if centered:
+        textpos = (screenpos[0] - (textSurface.get_width()/2), screenpos[1], screenpos[2])
+    else:
+        textpos = (screenpos[0], screenpos[1], screenpos[2])
+    glWindowPos3d(*textpos)     
     glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
 
 def exit():
@@ -89,8 +107,19 @@ def getText(origin, titleText):
             if event.type == KEYDOWN and event.key == K_ESCAPE:
                 inputting = False
                 return ""
+            if event.type == KEYDOWN and event.key == K_BACKSPACE:
+                inputValue = inputValue[:-1]
+                break
             if event.type == KEYDOWN:
                 inputValue = inputValue + event.unicode
+
+def urlGet(url, params):
+    f = urllib.urlopen(url, urllib.urlencode(params))
+    out = f.read()
+    if out != "":
+        print("Error returned by server: " + out)
+        return 1
+    return 0
 
 def newUser():
     if debug:
@@ -107,8 +136,12 @@ def newUser():
     print(initials)
     if initials == "":
         return
-    print("saving...")
-    # TODO
+    data = {
+        "name": userName,
+        "email": email,
+        "initials": initials
+    }
+    urlGet(SERVER_URL + "user/new", data)
 
 def run():
     pygame.init()
@@ -137,10 +170,13 @@ def run():
         for event in pygame.event.get():
             if event.type == QUIT:
                 exit()
-            if event.type == KEYDOWN and event.key == K_ESCAPE:
+            if event.type == KEYDOWN and (event.key == K_ESCAPE or event.key == K_q):
                 exit()
             if event.type == KEYDOWN and event.key == K_n:
+                global paused
+                paused = True
                 newUser()
+                paused = False
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
@@ -148,7 +184,8 @@ def run():
         glRotate(angles.y, 0, 0, -1)
         cube.render()
         glPopMatrix()
-        drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64)
+        drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
+        drawText(TEXTORIGIN_GAMENAME, currentUser, 32, False)
 
         pygame.display.flip()
 
@@ -257,8 +294,10 @@ class Angles(threading.Thread):
         self.update()
 
     def run(self):
+        global paused
         while True:
-            self.update()
+            if not paused:
+                self.update()
             time.sleep(ANGLE_WAITTIME)
     
     def update(self):
@@ -271,6 +310,12 @@ class Angles(threading.Thread):
         # This version is for constrained tilt (i.e. pitch only)
         self.tilt = abs(float(angles[1]))
         LOCK_ANGLES.release()
+
+    def getColor(self):
+        for angle, color in iter(sorted(ANGLE_COLORS.iteritems(), reverse=True)):
+            if self.tilt >= angle:
+                return color
+        return RGBA_WHITE
 
 if __name__ == "__main__":
     run()

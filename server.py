@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import web
 import math
+from sqlite3 import IntegrityError
 from adxl345 import ADXL345
 
 debug = True
@@ -50,7 +51,7 @@ class Index:
             str(get_tilt(axes['x'], axes['y'], axes['z']))
 
 class User:
-    def GET(self, action):
+    def POST(self, action):
         if action == "new":
             params = web.input()
             if "name" in params:
@@ -68,7 +69,12 @@ class User:
             self.score = 0
             if debug:
                 print "New user: " + self.name + "\n\t" + self.initials + "\n\t" + self.email + "\n\tScore: 0"
-            self.db.insert("user", email=self.email, initials=self.initials, name=self.name)
+            try:
+                self.db.insert("user", email=self.email, initials=self.initials, name=self.name)
+            except IntegrityError as err:
+                etxt = "{}".format(err)
+                print(etxt)
+                return etxt
             return ""
         else:
             return "unknown"
