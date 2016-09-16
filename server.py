@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import web
 import math
+import json
 from sqlite3 import IntegrityError
 from adxl345 import ADXL345
 
@@ -78,9 +79,33 @@ class User:
             return ""
         else:
             return "unknown"
+    def GET(self, action):
+        if action == "exists":
+            params = web.input()
+            if "initials" in params:
+                self.initials = params.initials
+            else:
+                raise WebError("No initials: Can't search for user")
+            try:
+                user = self.db.select("user", where="initials='{}'".format(self.initials))[0]
+            except IndexError:
+                return ""
+            self.name = user.name
+            self.email = user.email
+            return self.to_JSON()
+        else:
+            return "unknown"
 
     def __init__(self):
         self.db = openDB()
+
+    def to_JSON(self):
+        o = {
+            "initials": self.initials,
+            "email": self.email,
+            "name": self.name
+        }
+        return json.dumps(o, sort_keys=True, indent=4)
 
 class WebError(web.HTTPError):
     def __init__(self, errorString):

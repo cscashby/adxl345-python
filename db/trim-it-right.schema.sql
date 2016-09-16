@@ -19,15 +19,15 @@ CREATE TABLE user (
 	name text not null,
 	email text not null,
 	initials text not null,
-	created date
+	created timestamp
 );
 CREATE TRIGGER tg_user_created AFTER INSERT ON user
 BEGIN
 	UPDATE user SET created = CURRENT_TIMESTAMP WHERE rowid = new.rowid;
 END;
-CREATE UNIQUE INDEX ix_user_email on user(email);
 CREATE INDEX ix_game_success on game(success);
-CREATE INDEX ix_user_name on user(name);
-CREATE INDEX ix_user_initials on user(initials);
 CREATE INDEX ix_game_duration on game(duration);
 CREATE INDEX ix_game_score on game(score);
+CREATE UNIQUE INDEX ix_user_email on user(email);
+CREATE UNIQUE INDEX ix_user_initials on user(initials);
+CREATE INDEX ix_user_name on user(name);

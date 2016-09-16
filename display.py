@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import numpy as np
+import json
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
@@ -29,7 +30,8 @@ RGBA_RED = (255,0,0,255)
 RGBA_ORANGE = (255,128,0,255)
 RGBA_GREEN = (0,255,0,255)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
-TEXTORIGIN_GAMENAME = (GRID_MINX,GRID_MINY - 0.46,GRID_MAXZ)
+TEXTORIGIN_GAMENAME1 = (GRID_MINX,GRID_MINY - 0.36,GRID_MAXZ)
+TEXTORIGIN_GAMENAME2 = (GRID_MINX,GRID_MINY - 0.56,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
 ANGLE_WAITTIME = 0.1
@@ -37,7 +39,12 @@ ANGLE_WAITTIME = 0.1
 ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
 ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
 
-currentUser = "No current game"
+GAME_NONE = 0
+GAME_WAITING = 1
+GAME_RUNNING = 2
+
+global currentUser
+gameState = GAME_NONE
 currentScore = 0.0
 
 debug = True
@@ -113,35 +120,46 @@ def getText(origin, titleText):
             if event.type == KEYDOWN:
                 inputValue = inputValue + event.unicode
 
-def urlGet(url, params):
-    f = urllib.urlopen(url, urllib.urlencode(params))
+def urlPost(url, params=None):
+    if params:
+        f = urllib.urlopen(url, urllib.urlencode(params))
+    else:
+        f = urllib.urlopen(url)
     out = f.read()
-    if out != "":
-        print("Error returned by server: " + out)
-        return 1
-    return 0
+    return out
 
 def newUser():
     if debug:
-        print("New user requested")
-    userName = getText(TEXTORIGIN_INPUTS, "New user - initials?")
-    print(userName)
-    if userName == "":
-        return
-    email = getText(TEXTORIGIN_INPUTS, "User " + userName + " - email?")
-    print(email)
-    if email == "":
-        return
-    initials = getText(TEXTORIGIN_INPUTS, "User " + userName + " - Bottle markings?")
+        print("New game")
+    initials = getText(TEXTORIGIN_INPUTS, "Please type your initials")
     print(initials)
     if initials == "":
         return
-    data = {
-        "name": userName,
-        "email": email,
-        "initials": initials
-    }
-    urlGet(SERVER_URL + "user/new", data)
+    out = urlPost(SERVER_URL + "user/exists?initials={}".format(initials))
+    if out == "":
+        # User doesn't exist
+        email = getText(TEXTORIGIN_INPUTS, "Welcome, please type your email address")
+        print(email)
+        if email == "":
+            return
+        userName = getText(TEXTORIGIN_INPUTS, "Please type your name")
+        print(userName)
+        if userName == "":
+            return
+        data = {
+            "name": userName,
+            "email": email,
+            "initials": initials
+        }
+        post = urlPost(SERVER_URL + "user/new", data)
+        if post != "":
+            print "Error returned by server: {}".format(post)
+        currentUser = data
+    else:
+        currentUser = json.loads(out)
+
+    global gameState
+    gameState = GAME_WAITING
 
 def run():
     pygame.init()
@@ -185,7 +203,9 @@ def run():
         cube.render()
         glPopMatrix()
         drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
-        drawText(TEXTORIGIN_GAMENAME, currentUser, 32, False)
+        if gameState != GAME_NONE:
+            drawText(TEXTORIGIN_GAMENAME1, currentUser['name'], 32, False)
+            drawText(TEXTORIGIN_GAMENAME2, currentUser['initials'], 32, False)
 
         pygame.display.flip()
 
@@ -287,6 +307,8 @@ class Cube(object):
 LOCK_ANGLES = threading.Lock()
 
 class Angles(threading.Thread):
+    # TODO: Handle timeouts better - currently if the server has hung then the app hangs...
+
     def __init__( self, url ):
         threading.Thread.__init__(self)
         self.link = url
