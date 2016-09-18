@@ -133,7 +133,7 @@ def urlPost(url, params=None):
     out = f.read()
     return out
 
-def newUser():
+def newGame():
     global currentUser
     global currentScore
     if debug:
@@ -174,6 +174,7 @@ def newUser():
 def run():
     global gameState
     global currentScore
+    global paused
     pygame.init()
     DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
     SCREEN_SIZE = [0,0]
@@ -205,13 +206,41 @@ def run():
                 if gameState == GAME_NONE:
                     exit()
                 else:
-                    currentScore = 0.0
-                    gameState = GAME_NONE
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+                    drawText(TEXTORIGIN_INPUTS, "Are you sure you want to cancel game? Y/N", 32)
+                    pygame.display.flip()
+                    paused = True
+                    while paused:
+                        then2 = pygame.time.get_ticks()
+                        for event2 in pygame.event.get():
+                            if event2.type == KEYDOWN and (event2.key == K_y):
+                                currentScore = 0.0
+                                gameState = GAME_NONE
+                                paused = False
+                            if event2.type == KEYDOWN and (event2.key == K_n):
+                                paused = False
             if event.type == KEYDOWN and event.key == K_n:
-                global paused
                 paused = True
-                newUser()
+                newGame()
                 paused = False
+            if event.type == KEYDOWN and event.key == K_SPACE:
+                # Space ends the current game and records the score
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+                origin = TEXTORIGIN_INPUTS
+                drawText(origin, "Congratulations {}!".format(currentUser['name']), 32)
+                origin = np.add(origin, TEXTOFFSET_INPUTS)
+                drawText(origin, "Your final score was {:10.1f}".format(currentScore), 32)
+                origin = np.add(origin, TEXTOFFSET_INPUTS)
+                drawText(origin, "Press space to continue", 32)
+                pygame.display.flip()
+                paused = True
+                while paused:
+                    then2 = pygame.time.get_ticks()
+                    for event2 in pygame.event.get():
+                        if event2.type == KEYDOWN and (event2.key == K_SPACE):
+                            currentScore = 0.0
+                            gameState = GAME_NONE
+                            paused = False
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
