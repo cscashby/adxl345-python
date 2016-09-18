@@ -30,20 +30,25 @@ RGBA_RED = (255,0,0,255)
 RGBA_ORANGE = (255,128,0,255)
 RGBA_GREEN = (0,255,0,255)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
+TEXT_NOGAME = ["Hit n to start", "new game"]
 TEXTORIGIN_GAMENAME1 = (GRID_MINX,GRID_MINY - 0.36,GRID_MAXZ)
 TEXTORIGIN_GAMENAME2 = (GRID_MINX,GRID_MINY - 0.56,GRID_MAXZ)
+TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.48,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
 ANGLE_WAITTIME = 0.1
 
 ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
 ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
+SCORE_TIMEADDITION = 0.1
 
 GAME_NONE = 0
 GAME_WAITING = 1
 GAME_RUNNING = 2
 
+global currentScore
 global currentUser
+global gameState
 gameState = GAME_NONE
 currentScore = 0.0
 
@@ -129,8 +134,11 @@ def urlPost(url, params=None):
     return out
 
 def newUser():
+    global currentUser
+    global currentScore
     if debug:
         print("New game")
+    currentScore = 0.0
     initials = getText(TEXTORIGIN_INPUTS, "Please type your initials")
     print(initials)
     if initials == "":
@@ -156,12 +164,16 @@ def newUser():
             print "Error returned by server: {}".format(post)
         currentUser = data
     else:
+        if debug:
+            print out
         currentUser = json.loads(out)
 
     global gameState
     gameState = GAME_WAITING
 
 def run():
+    global gameState
+    global currentScore
     pygame.init()
     DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
     SCREEN_SIZE = [0,0]
@@ -189,7 +201,12 @@ def run():
             if event.type == QUIT:
                 exit()
             if event.type == KEYDOWN and (event.key == K_ESCAPE or event.key == K_q):
-                exit()
+                # Escape and Q either quit the current game or the app
+                if gameState == GAME_NONE:
+                    exit()
+                else:
+                    currentScore = 0.0
+                    gameState = GAME_NONE
             if event.type == KEYDOWN and event.key == K_n:
                 global paused
                 paused = True
@@ -206,6 +223,10 @@ def run():
         if gameState != GAME_NONE:
             drawText(TEXTORIGIN_GAMENAME1, currentUser['name'], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, currentUser['initials'], 32, False)
+            drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(currentScore), 32, False)
+        else:
+            drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
+            drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)
 
         pygame.display.flip()
 
@@ -331,6 +352,9 @@ class Angles(threading.Thread):
         self.y = float(angles[1])
         # This version is for constrained tilt (i.e. pitch only)
         self.tilt = abs(float(angles[1]))
+        global currentScore
+        currentScore = currentScore + SCORE_TIMEADDITION
+        currentScore = currentScore + self.getScore()
         LOCK_ANGLES.release()
 
     def getColor(self):
@@ -338,6 +362,12 @@ class Angles(threading.Thread):
             if self.tilt >= angle:
                 return color
         return RGBA_WHITE
+
+    def getScore(self):
+        for angle, score in iter(sorted(ANGLE_SCORES.iteritems(), reverse=True)):
+            if self.tilt >= angle:
+                return score
+        return 0
 
 if __name__ == "__main__":
     run()
