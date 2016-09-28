@@ -4,13 +4,20 @@ import pygame
 import urllib
 import sys
 import threading
+import thread
 import time
 import numpy as np
 import json
+import web
+from web import form
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
 from pygame.locals import *
+
+##################################################################################
+## Graphical display / game code
+##################################################################################
 
 SERVER_URL = "http://pi-dir:8080/"
 # This helps my tiny brain
@@ -207,7 +214,7 @@ def run():
                     exit()
                 else:
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-                    drawText(TEXTORIGIN_INPUTS, "Are you sure you want to cancel game? Y/N", 32)
+                    drawText(TEXTORIGIN_INPUTS, "Are you sure you want to finish game? Y/N", 32)
                     pygame.display.flip()
                     paused = True
                     while paused:
@@ -398,5 +405,79 @@ class Angles(threading.Thread):
                 return score
         return 0
 
+
+##################################################################################
+## Web server for display / game functionality
+##################################################################################
+form_newuser = form.Form(
+    form.Textbox('initials'),
+    form.Button('search/new'),
+)
+render = web.template.render('templates/')
+
+class Index:
+    def GET(self):
+        return "Nothing to see here, bye"
+
+class User:
+    def GET(self, action):
+        if action == "new":
+            f = form_newuser()
+            return render.trimitright_form(f)
+    def POST(self, action):
+        global currentUser
+        global currentScore
+        if action == "new":
+            f = form_newuser()
+            if not f.validates():
+                return render.trimitright_form(f)
+            else:
+                params = web.input()
+                initials = params.initials
+                out = urlPost(SERVER_URL + "user/exists?initials={}".format(initials))
+                if out == "":
+                    # User doesn't exist
+                    email = ""
+                    print(email)
+                    if email == "":
+                        return
+                    userName = ""
+                    print(userName)
+                    if userName == "":
+                        return
+                    data = {
+                        "name": userName,
+                        "email": email,
+                        "initials": initials
+                    }
+                    post = urlPost(SERVER_URL + "user/new", data)
+                    if post != "":
+                        print "Error returned by server: {}".format(post)
+                    currentUser = data
+                    currentScore = 0.0
+                    return "game started for " + currentUser['name']
+                else:
+                    if debug:
+                        print out
+                    currentUser = json.loads(out)
+                    currentScore = 0.0
+                    return "game started for " + currentUser['name']
+
+def startWeb():
+    urls = (
+        '/', 'Index',
+        '/user/(.+)', 'User',
+    )
+    app = web.application(urls,globals())
+    t = threading.Thread(target=app.run)
+    t.setDaemon(True)
+    t.setName('web-thread')
+    t.start()
+
+##################################################################################
+## Main running thread code
+##################################################################################
+
 if __name__ == "__main__":
+    startWeb()
     run()
