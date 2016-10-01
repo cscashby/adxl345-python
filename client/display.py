@@ -4,12 +4,12 @@ import pygame
 import urllib
 import sys
 import threading
-import thread
 import time
 import numpy as np
 import json
-import web
-from web import form
+import webclient
+from Angles import Angles
+from Game import Game
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
@@ -47,17 +47,6 @@ ANGLE_WAITTIME = 0.1
 
 ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
 ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
-SCORE_TIMEADDITION = 0.1
-
-GAME_NONE = 0
-GAME_WAITING = 1
-GAME_RUNNING = 2
-
-global currentScore
-global currentUser
-global gameState
-gameState = GAME_NONE
-currentScore = 0.0
 
 debug = True
 
@@ -141,11 +130,9 @@ def urlPost(url, params=None):
     return out
 
 def newGame():
-    global currentUser
-    global currentScore
     if debug:
         print("New game")
-    currentScore = 0.0
+    currentGame = Game()
     initials = getText(TEXTORIGIN_INPUTS, "Please type your initials")
     print(initials)
     if initials == "":
@@ -169,18 +156,16 @@ def newGame():
         post = urlPost(SERVER_URL + "user/new", data)
         if post != "":
             print "Error returned by server: {}".format(post)
-        currentUser = data
+        currentGame.setUser(data)
     else:
         if debug:
             print out
-        currentUser = json.loads(out)
+        currentGame.setUser(json.loads(out))
 
     global gameState
     gameState = GAME_WAITING
 
 def run():
-    global gameState
-    global currentScore
     global paused
     pygame.init()
     DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
@@ -361,123 +346,3 @@ class Cube(object):
             glVertex(vertices[v4])
         glEnd()
 
-LOCK_ANGLES = threading.Lock()
-
-class Angles(threading.Thread):
-    # TODO: Handle timeouts better - currently if the server has hung then the app hangs...
-
-    def __init__( self, url ):
-        threading.Thread.__init__(self)
-        self.link = url
-        self.daemon = True
-        self.update()
-
-    def run(self):
-        global paused
-        while True:
-            if not paused:
-                self.update()
-            time.sleep(ANGLE_WAITTIME)
-    
-    def update(self):
-        LOCK_ANGLES.acquire()
-        f = urllib.urlopen(self.link)
-        myfile = f.read()
-        angles = myfile.split(" ")
-        self.x = float(angles[0])
-        self.y = float(angles[1])
-        # This version is for constrained tilt (i.e. pitch only)
-        self.tilt = abs(float(angles[1]))
-        global currentScore
-        currentScore = currentScore + SCORE_TIMEADDITION
-        currentScore = currentScore + self.getScore()
-        LOCK_ANGLES.release()
-
-    def getColor(self):
-        for angle, color in iter(sorted(ANGLE_COLORS.iteritems(), reverse=True)):
-            if self.tilt >= angle:
-                return color
-        return RGBA_WHITE
-
-    def getScore(self):
-        for angle, score in iter(sorted(ANGLE_SCORES.iteritems(), reverse=True)):
-            if self.tilt >= angle:
-                return score
-        return 0
-
-
-##################################################################################
-## Web server for display / game functionality
-##################################################################################
-form_newuser = form.Form(
-    form.Textbox('initials'),
-    form.Button('search/new'),
-)
-render = web.template.render('templates/')
-
-class Index:
-    def GET(self):
-        return "Nothing to see here, bye"
-
-class User:
-    def GET(self, action):
-        if action == "new":
-            f = form_newuser()
-            return render.trimitright_form(f)
-    def POST(self, action):
-        global currentUser
-        global currentScore
-        if action == "new":
-            f = form_newuser()
-            if not f.validates():
-                return render.trimitright_form(f)
-            else:
-                params = web.input()
-                initials = params.initials
-                out = urlPost(SERVER_URL + "user/exists?initials={}".format(initials))
-                if out == "":
-                    # User doesn't exist
-                    email = ""
-                    print(email)
-                    if email == "":
-                        return
-                    userName = ""
-                    print(userName)
-                    if userName == "":
-                        return
-                    data = {
-                        "name": userName,
-                        "email": email,
-                        "initials": initials
-                    }
-                    post = urlPost(SERVER_URL + "user/new", data)
-                    if post != "":
-                        print "Error returned by server: {}".format(post)
-                    currentUser = data
-                    currentScore = 0.0
-                    return "game started for " + currentUser['name']
-                else:
-                    if debug:
-                        print out
-                    currentUser = json.loads(out)
-                    currentScore = 0.0
-                    return "game started for " + currentUser['name']
-
-def startWeb():
-    urls = (
-        '/', 'Index',
-        '/user/(.+)', 'User',
-    )
-    app = web.application(urls,globals())
-    t = threading.Thread(target=app.run)
-    t.setDaemon(True)
-    t.setName('web-thread')
-    t.start()
-
-##################################################################################
-## Main running thread code
-##################################################################################
-
-if __name__ == "__main__":
-    startWeb()
-    run()
