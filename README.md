@@ -1,7 +1,20 @@
 Prereqs
 =======
-sudo apt-get install sqlite3 python-sqlite
+# Update pi
+sudo apt-get update
+sudo apt-get dist-upgrade
+sudo apt-get autoremove
+sudo apt-get install rpi-update
+sudo rpi-update
 
+# And now to install accelerometer support
+sudo raspi-config # Advanced->Enable I2C
+sudo reboot # To enable i2c
+sudo apt-get install python-dev # for pip
+sudo apt-get install i2c-tools python-smbus wiringpi # gpio stuff
+sudo apt-get install sqlite3 python-sqlite
+sudo pip install web.py numpy
+sudo apt-get install screen # useful to run the server app
 
 adxl345-python
 ==============
