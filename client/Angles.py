@@ -1,7 +1,16 @@
 import threading
+import time
 import urllib
-from Game import Game
+import Game
+from constants import *
+from client import getGame, resetGame
+
 LOCK_ANGLES = threading.Lock()
+
+ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
+ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
+
+ANGLE_WAITTIME = 0.1
 
 class Angles(threading.Thread):
     # TODO: Handle timeouts better - currently if the server has hung then the app hangs...
@@ -10,11 +19,11 @@ class Angles(threading.Thread):
         self.link = url
         self.daemon = True
         self.update()
+        self.paused = False
 
     def run(self):
-        global paused
         while True:
-            if not paused:
+            if not self.isPaused():
                 self.update()
             time.sleep(ANGLE_WAITTIME)
     
@@ -27,8 +36,11 @@ class Angles(threading.Thread):
         self.y = float(angles[1])
         # This version is for constrained tilt (i.e. pitch only)
         self.tilt = abs(float(angles[1]))
-        currentGame.score = currentGame.score + Game.SCORE_TIMEADDITION
-        currentGame.score = currentGame.score + self.getScore()
+        #print "Tilt: %.2f" % self.tilt
+        getGame().score = getGame().score + Game.SCORE_TIMEADDITION
+        getGame().score = getGame().score + self.getScore()
+        print "Game Score: %.2f" % getGame().score
+        print "Score: %.2f" % self.getScore()
         LOCK_ANGLES.release()
 
     def getColor(self):
@@ -42,3 +54,12 @@ class Angles(threading.Thread):
             if self.tilt >= angle:
                 return score
         return 0
+
+    def isPaused(self):
+        return self.paused
+
+    def pause(self):
+        self.paused = True
+
+    def unpause(self):
+        self.paused = False

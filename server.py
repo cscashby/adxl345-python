@@ -8,6 +8,9 @@ from adxl345 import ADXL345
 debug = True
 DB_FILENAME = "db/trim-it-right.db"
 
+LISTEN_ADDRESS = "0.0.0.0"
+LISTEN_PORT = 8180
+
 urls = (
     '/', 'Index',
     '/user/(.+)', 'User',
@@ -107,6 +110,11 @@ class User:
         }
         return json.dumps(o, sort_keys=True, indent=4)
 
+class ServerApplication(web.application):
+    def run(self, port=8080, *middleware):
+        func = self.wsgifunc(*middleware)
+        return web.httpserver.runsimple(func, (LISTEN_ADDRESS, LISTEN_PORT))
+
 class WebError(web.HTTPError):
     def __init__(self, errorString):
         status = "400 Bad Request"
@@ -117,5 +125,5 @@ class WebError(web.HTTPError):
         web.HTTPError.__init__(self, status, headers, data)
 
 if __name__ == "__main__":
-    app = web.application(urls, globals())
+    app = ServerApplication(urls, globals())
     app.run()

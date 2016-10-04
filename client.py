@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import client.webclient
 import client.display
 

@@ -1,6 +1,6 @@
 Prereqs
 =======
-sudo apt-get install sqlite3 python-sqlite
+sudo apt-get install sqlite3 python-sqlite python-pygame python-opengl
 
 
 adxl345-python

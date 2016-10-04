@@ -4,22 +4,23 @@ import pygame
 import urllib
 import sys
 import threading
-import time
 import numpy as np
 import json
 import webclient
-from Angles import Angles
-from Game import Game
+from Angles import *
+from Game import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
 from pygame.locals import *
+from constants import *
+from client import getGame, resetGame
 
 ##################################################################################
 ## Graphical display / game code
 ##################################################################################
 
-SERVER_URL = "http://pi-dir:8080/"
+SERVER_URL = "http://pi-dir:8180/"
 # This helps my tiny brain
 GRID_MINX = -2
 GRID_MAXX = 2
@@ -30,12 +31,6 @@ GRID_MAXZ = 1
 COLOR_WHITE = (1.0, 1.0, 1.0)
 COLOR_BLACK = (.0, .0, .0)
 COLOR_BLUE = (.5, .5, .7)
-# RGBA format for Font.render
-RGBA_WHITE = (255,255,255,255)
-RGBA_BLACK = (0,0,0,255)
-RGBA_RED = (255,0,0,255)
-RGBA_ORANGE = (255,128,0,255)
-RGBA_GREEN = (0,255,0,255)
 TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
 TEXT_NOGAME = ["Hit n to start", "new game"]
 TEXTORIGIN_GAMENAME1 = (GRID_MINX,GRID_MINY - 0.36,GRID_MAXZ)
@@ -43,14 +38,8 @@ TEXTORIGIN_GAMENAME2 = (GRID_MINX,GRID_MINY - 0.56,GRID_MAXZ)
 TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.48,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
-ANGLE_WAITTIME = 0.1
-
-ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
-ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
 
 debug = True
-
-paused = False
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -132,7 +121,7 @@ def urlPost(url, params=None):
 def newGame():
     if debug:
         print("New game")
-    currentGame = Game()
+    resetGame()
     initials = getText(TEXTORIGIN_INPUTS, "Please type your initials")
     print(initials)
     if initials == "":
@@ -156,17 +145,15 @@ def newGame():
         post = urlPost(SERVER_URL + "user/new", data)
         if post != "":
             print "Error returned by server: {}".format(post)
-        currentGame.setUser(data)
+        getGame().setUser(data)
     else:
         if debug:
             print out
-        currentGame.setUser(json.loads(out))
+        getGame().setUser(json.loads(out))
 
-    global gameState
-    gameState = GAME_WAITING
+    getGame().state = GAME_WAITING
 
 def run():
-    global paused
     pygame.init()
     DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
     SCREEN_SIZE = [0,0]
@@ -179,6 +166,7 @@ def run():
         SCREEN_SIZE = [800, 600]
     screen = pygame.display.set_mode( SCREEN_SIZE, DISPLAY_FLAGS )
     newsize = (min(info.current_w, 800), min(info.current_h,600))
+    #newsize = (info.current_w, info.current_h)
     resize(*newsize)
     init()
     clock = pygame.time.Clock()
@@ -195,44 +183,44 @@ def run():
                 exit()
             if event.type == KEYDOWN and (event.key == K_ESCAPE or event.key == K_q):
                 # Escape and Q either quit the current game or the app
-                if gameState == GAME_NONE:
+                if getGame().state == GAME_NONE:
                     exit()
                 else:
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
                     drawText(TEXTORIGIN_INPUTS, "Are you sure you want to finish game? Y/N", 32)
                     pygame.display.flip()
-                    paused = True
-                    while paused:
+                    angles.pause()
+                    while angles.isPaused():
                         then2 = pygame.time.get_ticks()
                         for event2 in pygame.event.get():
                             if event2.type == KEYDOWN and (event2.key == K_y):
-                                currentScore = 0.0
-                                gameState = GAME_NONE
-                                paused = False
+                                getGame().score = 0.0
+                                getGame().state = GAME_NONE
+                                angles.unpause()
                             if event2.type == KEYDOWN and (event2.key == K_n):
-                                paused = False
+                                angles.unpause()
             if event.type == KEYDOWN and event.key == K_n:
-                paused = True
+                angles.pause()
                 newGame()
-                paused = False
+                angles.unpause()
             if event.type == KEYDOWN and event.key == K_SPACE:
                 # Space ends the current game and records the score
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
                 origin = TEXTORIGIN_INPUTS
-                drawText(origin, "Congratulations {}!".format(currentUser['name']), 32)
+                drawText(origin, "Congratulations {}!".format(getGame().user['name']), 32)
                 origin = np.add(origin, TEXTOFFSET_INPUTS)
-                drawText(origin, "Your final score was {:10.1f}".format(currentScore), 32)
+                drawText(origin, "Your final score was {:10.1f}".format(getGame().score), 32)
                 origin = np.add(origin, TEXTOFFSET_INPUTS)
                 drawText(origin, "Press space to continue", 32)
                 pygame.display.flip()
-                paused = True
-                while paused:
+                angles.pause()
+                while angles.isPaused():
                     then2 = pygame.time.get_ticks()
                     for event2 in pygame.event.get():
                         if event2.type == KEYDOWN and (event2.key == K_SPACE):
-                            currentScore = 0.0
-                            gameState = GAME_NONE
-                            paused = False
+                            getGame().score = 0.0
+                            getGame().state = GAME_NONE
+                            angles.unpause()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
@@ -241,10 +229,10 @@ def run():
         cube.render()
         glPopMatrix()
         drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
-        if gameState != GAME_NONE:
-            drawText(TEXTORIGIN_GAMENAME1, currentUser['name'], 32, False)
-            drawText(TEXTORIGIN_GAMENAME2, currentUser['initials'], 32, False)
-            drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(currentScore), 32, False)
+        if getGame().state != GAME_NONE:
+            drawText(TEXTORIGIN_GAMENAME1, getGame().user['name'], 32, False)
+            drawText(TEXTORIGIN_GAMENAME2, getGame().user['initials'], 32, False)
+            drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)

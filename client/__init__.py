@@ -1,3 +1,10 @@
 from Game import Game
 
-currentGame = Game()
+def getGame():
+    return currentGame
+
+def resetGame():
+    global currentGame
+    currentGame = Game()
+
+resetGame()

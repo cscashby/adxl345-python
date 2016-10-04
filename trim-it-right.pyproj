@@ -34,6 +34,9 @@
     <Compile Include="client\Angles.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="client\constants.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="client\display.py" />
     <Compile Include="client\Game.py">
       <SubType>Code</SubType>
