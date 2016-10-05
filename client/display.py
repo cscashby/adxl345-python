@@ -39,7 +39,43 @@ TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.48,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
 
+TEXTURE_FILENAME = 'img/gue-logo.bmp'
+
 debug = True
+
+imageTexture = {}
+
+def getTexture():
+    global imageTexture
+    if not imageTexture:
+        img = pygame.image.load(TEXTURE_FILENAME)
+        
+        imageTexture['textureData'] = pygame.image.tostring(img, "RGB", 1)
+        imageTexture['width'] = img.get_width()
+        imageTexture['height'] = img.get_height()
+        
+        imageTexture['image'] = glGenTextures(1)
+
+    return imageTexture
+
+def renderLogo(texture = {}):
+    if texture:
+        glBindTexture(GL_TEXTURE_2D, texture['image'])
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture['width'], texture['height'], 0, GL_RGB, GL_UNSIGNED_BYTE, texture['textureData'])
+        glEnable(GL_TEXTURE_2D)        
+
+    glBegin(GL_QUADS)
+    glTexCoord2f(0,0)
+    glVertex3f(-1,1.5,GRID_MAXZ)
+    glTexCoord2f(0,1)
+    glVertex3f(-1,1.0,GRID_MAXZ)
+    glTexCoord2f(1,1)
+    glVertex3f(1,1.5,GRID_MAXZ)
+    glTexCoord2f(1,0)
+    glVertex3f(1,1.0,GRID_MAXZ)
+    glEnd()
 
 def resize(width, height):
     glViewport(0, 0, width, height)
@@ -236,16 +272,25 @@ def run():
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)
+        renderLogo()
 
         pygame.display.flip()
 
 class Backdrop(object):
-    def __init__(self, color):
+    def __init__(self, color, texture = {}):
         self.color = color
+        self.texture = texture
 
     def render(self):
         then = pygame.time.get_ticks()
         glColor(self.color)
+
+        if self.texture:
+            glBindTexture(GL_TEXTURE_2D, self.texture['image'])
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.texture['width'], self.texture['height'], 0, GL_RGB, GL_UNSIGNED_BYTE, self.texture['textureData'])
+            glEnable(GL_TEXTURE_2D)
 
         glLineWidth(1)
         glBegin(GL_LINES)
@@ -286,9 +331,10 @@ class Backdrop(object):
 
 class Cube(object):
 
-    def __init__(self, position, color):
+    def __init__(self, position, color, texture = {}):
         self.position = position
         self.color = color
+        self.texture = texture
 
     # Cube information
     num_faces = 6
@@ -319,6 +365,13 @@ class Cube(object):
     def render(self):
         then = pygame.time.get_ticks()
         glColor(self.color)
+
+        if self.texture:
+            glBindTexture(GL_TEXTURE_2D, self.texture['image'])
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.texture['width'], self.texture['height'], 0, GL_RGB, GL_UNSIGNED_BYTE, self.texture['textureData'])
+            glEnable(GL_TEXTURE_2D)
 
         vertices = self.vertices
 
