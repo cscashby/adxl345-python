@@ -12,8 +12,7 @@ sudo raspi-config # Advanced->Enable I2C
 sudo reboot # To enable i2c
 sudo apt-get install python-dev # for pip
 sudo apt-get install i2c-tools python-smbus wiringpi # gpio stuff
-sudo apt-get install sqlite3 python-sqlite
-sudo pip install web.py numpy
+sudo pip install web.py numpy sqlite3 python-sqlite python-pygame python-opengl
 sudo apt-get install screen # useful to run the server app
 
 adxl345-python

@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{16c3fb98-a611-4bf6-8f15-fa7b3e2e340c}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>client.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <InterpreterVersion />
+    <IsWindowsApplication>False</IsWindowsApplication>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="img\gue-logo.png" />
+    <Content Include="LICENSE.txt" />
+    <Content Include="templates\trimitright_form.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="adxl345.py" />
+    <Compile Include="client.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\Angles.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\constants.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\display.py" />
+    <Compile Include="client\Game.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\User.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\webclient.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="server.py" />
+    <Compile Include="test\adxl345.py" />
+    <Compile Include="test\testaccel.py" />
+    <Compile Include="test\zangle.py" />
+    <Compile Include="client\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="img" />
+    <Folder Include="templates" />
+    <Folder Include="test" />
+    <Folder Include="client\" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
