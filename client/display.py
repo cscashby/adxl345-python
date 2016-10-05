@@ -122,16 +122,16 @@ def newGame():
     if debug:
         print("New game")
     resetGame()
-    initials = getText(TEXTORIGIN_INPUTS, "Please type your initials")
-    print(initials)
-    if initials == "":
+    email = getText(TEXTORIGIN_INPUTS, "Please type your email address")
+    print(email)
+    if email == "":
         return
-    out = urlPost(SERVER_URL + "user/exists?initials={}".format(initials))
+    out = urlPost(SERVER_URL + "user/exists?email={}".format(email))
     if out == "":
         # User doesn't exist
-        email = getText(TEXTORIGIN_INPUTS, "Welcome, please type your email address")
-        print(email)
-        if email == "":
+        initials = getText(TEXTORIGIN_INPUTS, "Welcome, please type your initials")
+        print(initials)
+        if initials == "":
             return
         userName = getText(TEXTORIGIN_INPUTS, "Please type your name")
         print(userName)

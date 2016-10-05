@@ -39,8 +39,8 @@ class Angles(threading.Thread):
         #print "Tilt: %.2f" % self.tilt
         getGame().score = getGame().score + Game.SCORE_TIMEADDITION
         getGame().score = getGame().score + self.getScore()
-        print "Game Score: %.2f" % getGame().score
-        print "Score: %.2f" % self.getScore()
+        #print "Game Score: %.2f" % getGame().score
+        #print "Score: %.2f" % self.getScore()
         LOCK_ANGLES.release()
 
     def getColor(self):

@@ -22,6 +22,10 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="db\backup-schema.sh" />
+    <Content Include="db\create-db.sh" />
+    <Content Include="db\trim-it-right.db" />
+    <Content Include="db\trim-it-right.schema.sql" />
     <Content Include="img\gue-logo.png" />
     <Content Include="LICENSE.txt" />
     <Content Include="templates\trimitright_form.html" />
@@ -56,6 +60,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="db\" />
     <Folder Include="img" />
     <Folder Include="templates" />
     <Folder Include="test" />

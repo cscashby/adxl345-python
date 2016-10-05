@@ -29,5 +29,5 @@ CREATE INDEX ix_game_success on game(success);
 CREATE INDEX ix_game_duration on game(duration);
 CREATE INDEX ix_game_score on game(score);
 CREATE UNIQUE INDEX ix_user_email on user(email);
-CREATE UNIQUE INDEX ix_user_initials on user(initials);
+CREATE INDEX ix_user_initials on user(initials);
 CREATE INDEX ix_user_name on user(name);

@@ -85,16 +85,21 @@ class User:
     def GET(self, action):
         if action == "exists":
             params = web.input()
-            if "initials" in params:
-                self.initials = params.initials
-            else:
-                raise WebError("No initials: Can't search for user")
             try:
-                user = self.db.select("user", where="initials='{}'".format(self.initials))[0]
+                if "initials" in params:
+                    self.initials = params.initials
+                    user = self.db.select("user", where="initials='{}'".format(self.initials))[0]
+                    self.email = user.email
+                else:
+                    if "email" in params:
+                        self.email = params.email
+                        user = self.db.select("user", where="email='{}'".format(self.email))[0]
+                        self.initials = user.initials
+                    else:
+                        raise WebError("No email address or initials: Can't search for user")
             except IndexError:
                 return ""
             self.name = user.name
-            self.email = user.email
             return self.to_JSON()
         else:
             return "unknown"
