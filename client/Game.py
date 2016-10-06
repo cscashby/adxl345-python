@@ -4,8 +4,7 @@ from util import urlPost
 SCORE_TIMEADDITION = 0.1
 
 GAME_NONE = 0
-GAME_WAITING = 1
-GAME_RUNNING = 2
+GAME_RUNNING = 1
 
 class Game():
     def __init__( self, gameName ):

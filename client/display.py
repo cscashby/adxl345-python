@@ -135,7 +135,7 @@ def newGame():
     else:
         getGame().setUser(user)
 
-    getGame().state = GAME_WAITING
+    getGame().state = GAME_RUNNING
 
 def run(gameName):
     pygame.init()
