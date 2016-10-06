@@ -14,6 +14,8 @@
     <InterpreterId />
     <InterpreterVersion />
     <IsWindowsApplication>False</IsWindowsApplication>
+    <CommandLineArguments>debug</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -46,6 +48,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="client\User.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="client\util.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="client\webclient.py">

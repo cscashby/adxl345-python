@@ -7,20 +7,20 @@ import threading
 import numpy as np
 import json
 import webclient
-from Angles import *
+from client import getGame, resetGame
 from Game import *
+from Angles import *
+from User import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from math import radians
 from pygame.locals import *
 from constants import *
-from client import getGame, resetGame
 
 ##################################################################################
 ## Graphical display / game code
 ##################################################################################
 
-SERVER_URL = "http://pi-dir:8180/"
 # This helps my tiny brain
 GRID_MINX = -2
 GRID_MAXX = 2
@@ -110,24 +110,16 @@ def getText(origin, titleText):
             if event.type == KEYDOWN:
                 inputValue = inputValue + event.unicode
 
-def urlPost(url, params=None):
-    if params:
-        f = urllib.urlopen(url, urllib.urlencode(params))
-    else:
-        f = urllib.urlopen(url)
-    out = f.read()
-    return out
-
 def newGame():
     if debug:
         print("New game")
-    resetGame()
+    resetGame(getGame().gameName)
     email = getText(TEXTORIGIN_INPUTS, "Please type your email address")
     print(email)
     if email == "":
         return
-    out = urlPost(SERVER_URL + "user/exists?email={}".format(email))
-    if out == "":
+    user = findUser(email=email)
+    if not user:
         # User doesn't exist
         initials = getText(TEXTORIGIN_INPUTS, "Welcome, please type your initials")
         print(initials)
@@ -137,23 +129,15 @@ def newGame():
         print(userName)
         if userName == "":
             return
-        data = {
-            "name": userName,
-            "email": email,
-            "initials": initials
-        }
-        post = urlPost(SERVER_URL + "user/new", data)
-        if post != "":
-            print "Error returned by server: {}".format(post)
-        getGame().setUser(data)
+        user = User(userName, email, initials)
+        user.save()
+        getGame().setUser(user)
     else:
-        if debug:
-            print out
-        getGame().setUser(json.loads(out))
+        getGame().setUser(user)
 
     getGame().state = GAME_WAITING
 
-def run():
+def run(gameName):
     pygame.init()
     DISPLAY_FLAGS = HWSURFACE | OPENGL | DOUBLEBUF
     SCREEN_SIZE = [0,0]
@@ -175,6 +159,8 @@ def run():
 
     angles = Angles(SERVER_URL)
     angles.start()
+
+    getGame().setGameName(gameName)
 
     while True:
         then = pygame.time.get_ticks()
@@ -207,13 +193,14 @@ def run():
                 # Space ends the current game and records the score
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
                 origin = TEXTORIGIN_INPUTS
-                drawText(origin, "Congratulations {}!".format(getGame().user['name']), 32)
+                drawText(origin, "Congratulations {}!".format(getGame().user.userName), 32)
                 origin = np.add(origin, TEXTOFFSET_INPUTS)
                 drawText(origin, "Your final score was {:10.1f}".format(getGame().score), 32)
                 origin = np.add(origin, TEXTOFFSET_INPUTS)
                 drawText(origin, "Press space to continue", 32)
                 pygame.display.flip()
                 angles.pause()
+                getGame().save()
                 while angles.isPaused():
                     then2 = pygame.time.get_ticks()
                     for event2 in pygame.event.get():
@@ -230,8 +217,8 @@ def run():
         glPopMatrix()
         drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
-            drawText(TEXTORIGIN_GAMENAME1, getGame().user['name'], 32, False)
-            drawText(TEXTORIGIN_GAMENAME2, getGame().user['initials'], 32, False)
+            drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
+            drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
             drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)

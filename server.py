@@ -14,6 +14,7 @@ LISTEN_PORT = 8180
 urls = (
     '/', 'Index',
     '/user/(.+)', 'User',
+    '/game/(.+)', 'Game',
 )
 
 def openDB():
@@ -100,6 +101,7 @@ class User:
             except IndexError:
                 return ""
             self.name = user.name
+            self.id = user.id
             return self.to_JSON()
         else:
             return "unknown"
@@ -111,9 +113,41 @@ class User:
         o = {
             "initials": self.initials,
             "email": self.email,
-            "name": self.name
+            "name": self.name,
+            "id": self.id
         }
         return json.dumps(o, sort_keys=True, indent=4)
+
+class Game:
+    def POST(self, action):
+        if action == "new":
+            params = web.input()
+            if "gameName" in params:
+                self.gameName = params.gameName
+            else:
+                raise WebError("No game name: Can't create game")
+            if "score" in params:
+                self.score = params.score
+            else:
+                raise WebError("No score: Can't create game")
+            if "userID" in params:
+                self.userID= params.userID
+            else:
+                raise WebError("No userID: Can't create game")
+            if debug:
+                print "New game: {}, {}, {}".format(self.gameName, self.score, self.userID)
+            try:
+                self.db.insert("game", gameName=self.gameName, user_id=self.userID, date=web.SQLLiteral("datetime()"), score=self.score, success=True)
+            except IntegrityError as err:
+                etxt = "{}".format(err)
+                print(etxt)
+                return etxt
+            return ""
+        else:
+            return "unknown"
+
+    def __init__(self):
+        self.db = openDB()
 
 class ServerApplication(web.application):
     def run(self, port=8080, *middleware):

@@ -1,10 +1,11 @@
+import urllib
 from Game import Game
 
 def getGame():
     return currentGame
 
-def resetGame():
+def resetGame(gameName):
     global currentGame
-    currentGame = Game()
+    currentGame = Game(gameName)
 
-resetGame()
+resetGame("")

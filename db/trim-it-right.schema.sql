@@ -1,7 +1,8 @@
 CREATE TABLE game (
 	id integer primary key,
+	gameName text not null,
 	user_id integer not null,
-	date date,
+	date date not null,
 	score integer,
 	duration numeric,
 	success integer,
