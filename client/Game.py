@@ -13,6 +13,7 @@ class Game():
         self.score = 0.0
         self.state = GAME_NONE
         self.gameName = gameName
+        self.duration = 0.0
 
     def setUser( self, user ):
         self.user = user
@@ -25,6 +26,7 @@ class Game():
             "gameName" : self.gameName,
             "score" : self.score,
             "userID" : self.user.id,
+            "duration" : self.duration,
         }
 
         post = urlPost(SERVER_URL + "game/new", data)

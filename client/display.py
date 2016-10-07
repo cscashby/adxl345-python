@@ -35,9 +35,11 @@ TEXTORIGIN_ANGLE = (0,GRID_MINY - 0.52,GRID_MAXZ)
 TEXT_NOGAME = ["Hit n to start", "new game"]
 TEXTORIGIN_GAMENAME1 = (GRID_MINX,GRID_MINY - 0.36,GRID_MAXZ)
 TEXTORIGIN_GAMENAME2 = (GRID_MINX,GRID_MINY - 0.56,GRID_MAXZ)
-TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.48,GRID_MAXZ)
+TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.36,GRID_MAXZ)
+TEXTORIGIN_GAMETIME = (GRID_MAXX - 0.5,GRID_MINY - 0.56,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
+TEXT_SPACEWAITING = "<SPACE TO START GAME>"
 
 debug = True
 
@@ -212,6 +214,7 @@ def run(gameName):
                 angles.pause()
                 getGame().score = 0.0
                 getGame().state = GAME_RUNNING
+                angles.setStartTime()
                 angles.unpause()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -225,9 +228,10 @@ def run(gameName):
             drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
             drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
             if getGame().state == GAME_WAITING:
-                drawText(TEXTORIGIN_GAMESCORE, "<<SPACE TO START>>", 32, False)
+                drawText(TEXTORIGIN_GAMESCORE, TEXT_SPACEWAITING, 32, False)
             else:
                 drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
+                drawText(TEXTORIGIN_GAMETIME, "{:10.1f}".format(getGame().duration), 32, False)
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)

@@ -1,5 +1,6 @@
 import threading
 import time
+import datetime
 import urllib
 import Game
 from constants import *
@@ -20,6 +21,7 @@ class Angles(threading.Thread):
         self.daemon = True
         self.update()
         self.paused = False
+        self.setStartTime()
 
     def run(self):
         while True:
@@ -38,11 +40,18 @@ class Angles(threading.Thread):
         self.tilt = abs(float(angles[1]))
         #print "Tilt: %.2f" % self.tilt
         if getGame().state == Game.GAME_RUNNING:
-        	getGame().score = getGame().score + Game.SCORE_TIMEADDITION
-        	getGame().score = getGame().score + self.getScore()
+            getGame().score = getGame().score + Game.SCORE_TIMEADDITION
+            getGame().score = getGame().score + self.getScore()
+            getGame().duration = self.getDuration()
         #print "Game Score: %.2f" % getGame().score
         #print "Score: %.2f" % self.getScore()
         LOCK_ANGLES.release()
+
+    def setStartTime(self):
+        self.startTime = datetime.datetime.now()
+
+    def getDuration(self):
+        return (datetime.datetime.now() - self.startTime).total_seconds()
 
     def getColor(self):
         for angle, color in iter(sorted(ANGLE_COLORS.iteritems(), reverse=True)):

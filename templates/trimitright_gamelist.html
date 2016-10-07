@@ -15,7 +15,7 @@ $def select(options):
             $:option
     </select>
 
-$ headings = [('Name', 'name'),('Initials', 'initials'),('Game','gameName'),('When','date'),('Score','score')]
+$ headings = [('Name', 'name'),('Initials', 'initials'),('Game','gameName'),('When','date'),('Score','score'),('Duration /s', 'duration','%0.2f')]
 
 <form name="main" method="post">
     <h1>$heading</h1>
@@ -36,7 +36,10 @@ $ headings = [('Name', 'name'),('Initials', 'initials'),('Game','gameName'),('Wh
             $for game in games['games']:
             <tr>
                 $for h in headings:
-                    <td>$game[h[1]]</td>
+                    $if len(h) == 3 and game[h[1]]:
+                        <td>$(h[2] % game[h[1]])</td>
+                    $else:
+                        <td>$game[h[1]]</td>
             </tr>
         </tbody>
     </table>    

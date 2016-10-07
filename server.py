@@ -120,7 +120,7 @@ class User:
         return json.dumps(o, sort_keys=True, indent=4)
 
 QUERY_GAMELISTALL = """
-    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName
+    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName, g.duration
     FROM game g
     JOIN user u
     WHERE g.user_id = u.id
@@ -128,7 +128,7 @@ QUERY_GAMELISTALL = """
 """
 
 QUERY_GAMELIST = """
-    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName
+    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName, g.duration
     FROM game g
     JOIN user u
     WHERE g.user_id = u.id
@@ -160,14 +160,18 @@ class Game:
                 self.score = params.score
             else:
                 raise WebError("No score: Can't create game")
+            if "duration" in params:
+                self.duration = params.duration
+            else:
+                raise WebError("No duration: Can't create game")
             if "userID" in params:
                 self.userID= params.userID
             else:
                 raise WebError("No userID: Can't create game")
             if debug:
-                print "New game: {}, {}, {}".format(self.gameName, self.score, self.userID)
+                print "New game: {}, {}, {}, {}".format(self.gameName, self.score, self.duration, self.userID)
             try:
-                self.db.insert("game", gameName=self.gameName, user_id=self.userID, date=web.SQLLiteral("datetime()"), score=self.score, success=True)
+                self.db.insert("game", gameName=self.gameName, user_id=self.userID, date=web.SQLLiteral("datetime()"), score=self.score, duration=self.duration, success=True)
             except IntegrityError as err:
                 etxt = "{}".format(err)
                 print(etxt)
