@@ -6,6 +6,7 @@ SCORE_TIMEADDITION = 0.1
 
 GAME_NONE = 0
 GAME_RUNNING = 1
+GAME_WAITING = 10
 
 class Game():
     def __init__( self, gameName ):

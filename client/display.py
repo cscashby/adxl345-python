@@ -135,7 +135,7 @@ def newGame():
     else:
         getGame().setUser(user)
 
-    getGame().state = GAME_RUNNING
+    getGame().state = GAME_WAITING
 
 def run(gameName):
     pygame.init()
@@ -144,13 +144,13 @@ def run(gameName):
     info = pygame.display.Info()
     if debug:
         print("Screen width %d, Height %d" % (info.current_w, info.current_h))
-    if info.current_w <= 800:
+#    if info.current_w <= 800:
         DISPLAY_FLAGS = DISPLAY_FLAGS | FULLSCREEN | NOFRAME
-    else:
-        SCREEN_SIZE = [800, 600]
+#    else:
+#        SCREEN_SIZE = [800, 600]
     screen = pygame.display.set_mode( SCREEN_SIZE, DISPLAY_FLAGS )
-    newsize = (min(info.current_w, 800), min(info.current_h,600))
-    #newsize = (info.current_w, info.current_h)
+#    newsize = (min(info.current_w, 800), min(info.current_h,600))
+    newsize = (info.current_w, info.current_h)
     resize(*newsize)
     init()
     clock = pygame.time.Clock()
@@ -189,7 +189,8 @@ def run(gameName):
                 angles.pause()
                 newGame()
                 angles.unpause()
-            if event.type == KEYDOWN and event.key == K_SPACE:
+            if getGame().state == GAME_RUNNING and event.type == KEYDOWN and event.key == K_SPACE:
+                angles.pause()
                 # Space ends the current game and records the score
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
                 origin = TEXTORIGIN_INPUTS
@@ -199,7 +200,6 @@ def run(gameName):
                 origin = np.add(origin, TEXTOFFSET_INPUTS)
                 drawText(origin, "Press space to continue", 32)
                 pygame.display.flip()
-                angles.pause()
                 getGame().save()
                 while angles.isPaused():
                     then2 = pygame.time.get_ticks()
@@ -208,6 +208,11 @@ def run(gameName):
                             getGame().score = 0.0
                             getGame().state = GAME_NONE
                             angles.unpause()
+            if getGame().state == GAME_WAITING and event.type == KEYDOWN and event.key == K_SPACE:
+                angles.pause()
+                getGame().score = 0.0
+                getGame().state = GAME_RUNNING
+                angles.unpause()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
@@ -219,7 +224,10 @@ def run(gameName):
         if getGame().state != GAME_NONE:
             drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
             drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
-            drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
+            if getGame().state == GAME_WAITING:
+                drawText(TEXTORIGIN_GAMESCORE, "<<SPACE TO START>>", 32, False)
+            else:
+                drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)

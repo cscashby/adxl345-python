@@ -9,8 +9,12 @@
     $if content.cssfiles:
         $for f in content.cssfiles.split():
             <link rel="stylesheet" href="$f" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="/static/main.css" type="text/css" media="screen" charset="utf-8" />
 </head>
 <body>
+    <div id="watermark">
+	<img src="/static/gue-logo.png"/>
+    </div>
     <img src="/static/turtle.jpg" height="429px" width="851px"/>
     <table>
         <tr>

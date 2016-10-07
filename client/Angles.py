@@ -37,8 +37,9 @@ class Angles(threading.Thread):
         # This version is for constrained tilt (i.e. pitch only)
         self.tilt = abs(float(angles[1]))
         #print "Tilt: %.2f" % self.tilt
-        getGame().score = getGame().score + Game.SCORE_TIMEADDITION
-        getGame().score = getGame().score + self.getScore()
+        if getGame().state == Game.GAME_RUNNING:
+        	getGame().score = getGame().score + Game.SCORE_TIMEADDITION
+        	getGame().score = getGame().score + self.getScore()
         #print "Game Score: %.2f" % getGame().score
         #print "Score: %.2f" % self.getScore()
         LOCK_ANGLES.release()
