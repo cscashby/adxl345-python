@@ -1,0 +1,17 @@
+﻿$def with (content)
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>$content.title</title>
+
+    $if content.cssfiles:
+        $for f in content.cssfiles.split():
+            <link rel="stylesheet" href="$f" type="text/css" media="screen" charset="utf-8" />
+</head>
+<body>
+    <img src="/static/turtle.jpg" height="429px" width="851px"/>
+    <p>$:content</p>
+</body>
+</html>
