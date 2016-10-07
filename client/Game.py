@@ -1,3 +1,4 @@
+import json
 from constants import *
 from util import urlPost
 
@@ -29,3 +30,22 @@ class Game():
 
         if post != "":
             print "Error returned by server: {}".format(post)
+
+def getNames():
+    out = urlPost(SERVER_URL + "game/getNames")
+    if out == "":
+        return False
+    else:
+        return json.loads(out)['gameNames']
+
+def getList(gameName):
+    if gameName != "":
+        out = urlPost(SERVER_URL + "game/getGames?gameName={}".format(gameName))
+    else:
+        out = urlPost(SERVER_URL + "game/getGames")
+
+    # Returns null string if no list returned
+    if out == "":
+        return False
+    else:
+        return json.loads(out)

@@ -4,6 +4,7 @@ import math
 import json
 from sqlite3 import IntegrityError
 from adxl345 import ADXL345
+from JSONUtils import PythonObjectEncoder
 
 debug = True
 DB_FILENAME = "db/trim-it-right.db"
@@ -118,7 +119,36 @@ class User:
         }
         return json.dumps(o, sort_keys=True, indent=4)
 
+QUERY_GAMELISTALL = """
+    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName
+    FROM game g
+    JOIN user u
+    WHERE g.user_id = u.id
+    ORDER BY g.score DESC, g.date DESC
+"""
+
+QUERY_GAMELIST = """
+    SELECT u.email, u.name, u.initials, g.date, g.score, g.gameName
+    FROM game g
+    JOIN user u
+    WHERE g.user_id = u.id
+        AND g.gameName = $gameName
+    ORDER BY g.score DESC, g.date DESC
+"""
+
 class Game:
+    def GET(self, action):
+        if action == "getNames":
+            gameNames = self.db.query("SELECT DISTINCT gameName FROM game")
+            return json.dumps({"gameNames": list(gameNames)}, cls=PythonObjectEncoder)
+        if action == "getGames":
+            params = web.input()
+            if params and "gameName" in params:
+                games = self.db.query(QUERY_GAMELIST, vars={'gameName':params['gameName']})
+                return json.dumps({"games": list(games)}, cls=PythonObjectEncoder)
+            else:
+                games = self.db.query(QUERY_GAMELISTALL)
+                return json.dumps({"games": list(games)}, cls=PythonObjectEncoder)
     def POST(self, action):
         if action == "new":
             params = web.input()

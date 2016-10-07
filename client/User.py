@@ -43,5 +43,8 @@ class User(object):
 
             if post != "":
                 print "Error returned by server: {}".format(post)
+            else:
+                # Populate our ID back from DB now the user exists
+                self.id = findUser(email = self.email).id
         else:
             print "Attempted, and refused to save User with ID: {}".format(self.id)

@@ -31,7 +31,9 @@
     <Content Include="img\gue-logo.png" />
     <Content Include="LICENSE.txt" />
     <Content Include="templates\base_template.html" />
+    <Content Include="templates\trimitright_blank.html" />
     <Content Include="templates\trimitright_form.html" />
+    <Content Include="templates\trimitright_gamelist.html" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="adxl345.py" />
@@ -51,7 +53,8 @@
     <Compile Include="client\User.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="client\util.py">
+    <Compile Include="JSONUtils.py" />
+    <Compile Include="util.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="client\webclient.py">

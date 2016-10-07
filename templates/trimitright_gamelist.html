@@ -1,0 +1,43 @@
+﻿$def with (heading, bodycontent, names, name, games)
+$var title: GUE Trim-it-Right game list
+$var cssfiles:
+
+$def option(value, selected):
+    $if selected:
+        <option selected="selected">$value['gameName']</option>
+    $else:
+        <option>$value['gameName']</option>
+
+$def select(options):
+    <select name="gameName" onChange="document.location = '/game/list?gameName=' + this.value;">
+        <option value="">-- Select a game --</option>
+        $for option in options:
+            $:option
+    </select>
+
+$ headings = [('Name', 'name'),('Initials', 'initials'),('Game','gameName'),('When','date'),('Score','score')]
+
+<form name="main" method="post">
+    <h1>$heading</h1>
+    <p>$bodycontent</p>
+    <p>
+        Select game:
+        $:select([option(n, n['gameName'] == name) for n in names])
+    </p>
+    <!-- $:games -->
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                $for h in headings:
+                    <td>$h[0]</td>
+            </tr>
+        </thead>
+        <tbody>
+            $for game in games['games']:
+            <tr>
+                $for h in headings:
+                    <td>$game[h[1]]</td>
+            </tr>
+        </tbody>
+    </table>    
+</form>

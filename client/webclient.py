@@ -9,6 +9,7 @@ from User import *
 from Game import *
 from util import urlPost
 from client import getGame, resetGame
+from JSONUtils import PythonObjectEncoder
 
 ##################################################################################
 ## Web server for display / game functionality
@@ -32,11 +33,11 @@ form_stopgame = form.Form(
     form.Button("Cancel"),
     form.Button("Finish"),
 )
-render = web.template.render('templates/', base="base_template")
+render = web.template.render('templates/', base="base_template", globals={'json':json})
 
 class Index:
     def GET(self):
-        return "Nothing to see here, bye"
+        return render.trimitright_blank()
 
 class GameStatus:
     def GET(self, action):
@@ -52,6 +53,12 @@ class GameStatus:
             body = "Do you want to start a new game for {}?".format(getGame().user.userName)
             f = form_startconfirm()
             return render.trimitright_form(f, "Start game", body)
+        if action == "list":
+            params = web.input()
+            gameName = ""
+            if params and 'gameName' in params:
+                gameName = params['gameName']
+            return render.trimitright_gamelist("Game list", "", getNames(), gameName, getList(gameName))
     def POST(self, action):
         if action == "control":
             formheading = "Game control"
