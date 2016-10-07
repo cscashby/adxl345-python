@@ -30,6 +30,7 @@
     <Content Include="db\trim-it-right.schema.sql" />
     <Content Include="img\gue-logo.png" />
     <Content Include="LICENSE.txt" />
+    <Content Include="templates\base_template.html" />
     <Content Include="templates\trimitright_form.html" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +68,7 @@
   <ItemGroup>
     <Folder Include="db\" />
     <Folder Include="img" />
+    <Folder Include="static\" />
     <Folder Include="templates" />
     <Folder Include="test" />
     <Folder Include="client\" />

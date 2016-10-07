@@ -1,6 +1,10 @@
-$def with (form)
+$def with (form, heading, bodycontent)
+$var title: GUE Trim-it-Right game control
+$var cssfiles:
 
 <form name="main" method="post"> 
+<h1>$heading</h1>
+<p>$bodycontent</p>
 $if not form.valid: <p class="error">Try again:</p>
 $:form.render()
 </form>
