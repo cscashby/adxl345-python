@@ -10,8 +10,9 @@ from JSONUtils import PythonObjectEncoder
 HASPHAT = True
 try:
     import scrollphat
-except ImportError:
-    HASPHAT = True
+    counter = 0
+except:
+    HASPHAT = False
 
 debug = True
 DB_FILENAME = "db/trim-it-right.db"
@@ -45,7 +46,10 @@ def get_tilt(x,y,z):
     # We want abs here to get a number 0-90 degrees (never 90-180 degrees)
     # This is the 3 dimensional tilt number.
     # Use y rotation for 2 dimensional (i.e. constrained to pitch only)
-    deg = math.degrees(math.acos(abs(z / math.sqrt(x**2+y**2+z**2))))
+    try:
+        deg = math.degrees(math.acos(abs(z / math.sqrt(x**2+y**2+z**2))))
+    except ZeroDivisionError:
+        return 0
     return deg
 
 class Index:
@@ -66,8 +70,14 @@ class Index:
 
         if HASPHAT:
             a = []
-            for i in range(0,11):
+            global counter
+            for i in range(0,10):
                 a.append(abs(y))
+            if counter > 70:
+                counter = 0
+            else:
+                counter = counter + 5
+            a.append(counter)
             scrollphat.graph(a, 0, 75)
 
         return str(x) + " " + str(y) + " " + str(tilt)
