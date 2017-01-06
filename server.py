@@ -2,9 +2,16 @@
 import web
 import math
 import json
+import time
 from sqlite3 import IntegrityError
 from adxl345 import ADXL345
 from JSONUtils import PythonObjectEncoder
+
+HASPHAT = True
+try:
+    import scrollphat
+except ImportError:
+    HASPHAT = True
 
 debug = True
 DB_FILENAME = "db/trim-it-right.db"
@@ -38,7 +45,8 @@ def get_tilt(x,y,z):
     # We want abs here to get a number 0-90 degrees (never 90-180 degrees)
     # This is the 3 dimensional tilt number.
     # Use y rotation for 2 dimensional (i.e. constrained to pitch only)
-    return math.degrees(math.acos(abs(z / math.sqrt(x**2+y**2+z**2))))
+    deg = math.degrees(math.acos(abs(z / math.sqrt(x**2+y**2+z**2))))
+    return deg
 
 class Index:
     def GET(self):
@@ -52,9 +60,17 @@ class Index:
         accel_yout_scaled = accel_yout / 16384.0
         accel_zout_scaled = accel_zout / 16384.0
 
-        return str(get_x_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled)) + " " + \
-            str(get_y_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled)) + " " + \
-            str(get_tilt(axes['x'], axes['y'], axes['z']))
+        x = get_x_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled)
+        y = get_y_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled)
+        tilt = get_tilt(axes['x'], axes['y'], axes['z'])
+
+        if HASPHAT:
+            a = []
+            for i in range(0,11):
+                a.append(abs(y))
+            scrollphat.graph(a, 0, 90)
+
+        return str(x) + " " + str(y) + " " + str(tilt)
 
 class User:
     def POST(self, action):
@@ -197,6 +213,17 @@ class WebError(web.HTTPError):
             print "Web error 400: " + errorString
         web.HTTPError.__init__(self, status, headers, data)
 
+def scrollonce(str):
+    scrollphat.write_string(str, 11)
+    length = scrollphat.buffer_len()
+    for i in range(length):
+        scrollphat.scroll()
+        time.sleep(0.1)
+
 if __name__ == "__main__":
     app = ServerApplication(urls, globals())
+    if HASPHAT:
+        scrollphat.clear()
+        scrollphat.set_brightness(20)
+        scrollonce("OK")
     app.run()
