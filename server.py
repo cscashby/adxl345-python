@@ -68,7 +68,7 @@ class Index:
             a = []
             for i in range(0,11):
                 a.append(abs(y))
-            scrollphat.graph(a, 0, 90)
+            scrollphat.graph(a, 0, 75)
 
         return str(x) + " " + str(y) + " " + str(tilt)
 
