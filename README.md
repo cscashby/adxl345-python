@@ -10,9 +10,9 @@ sudo rpi-update
 # And now to install accelerometer support
 sudo raspi-config # Advanced->Enable I2C
 sudo reboot # To enable i2c
-sudo apt-get install python-dev # for pip
 sudo apt-get install i2c-tools python-smbus wiringpi # gpio stuff
-sudo pip install web.py numpy sqlite3 python-sqlite python-pygame python-opengl
+sudo apt-get install python-pygame python-opengl python-pysqlite2 python-numpy python-webpy # python stuff
+sudo apt-get install python-scrollphat # For server / table only if using the scroll pihat
 sudo apt-get install screen # useful to run the server app
 
 adxl345-python
