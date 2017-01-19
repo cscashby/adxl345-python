@@ -25,7 +25,7 @@ def parseUser(u):
     return User(u['name'], u['email'], u['initials'], u['id'])
 
 class User(object):
-    def __init__( self, userName, email, initials, id=None ):
+    def __init__( self, userName, email, initials = "", id=None ):
         self.userName = userName
         self.email = email
         self.initials = initials

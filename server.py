@@ -71,7 +71,7 @@ class User:
             if "initials" in params:
                 self.initials = params.initials
             else:
-                raise WebError("No initials: Can't create user")
+                self.initials = "x"
             self.score = 0
             if debug:
                 print "New user: " + self.name + "\n\t" + self.initials + "\n\t" + self.email + "\n\tScore: 0"

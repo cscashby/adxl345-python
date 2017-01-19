@@ -39,7 +39,7 @@ TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.36,GRID_MAXZ)
 TEXTORIGIN_GAMETIME = (GRID_MAXX - 0.5,GRID_MINY - 0.56,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
-TEXT_SPACEWAITING = "<SPACE TO START GAME>"
+TEXT_SPACEWAITING = "<C to calibrate, SPACE TO START GAME>"
 
 debug = True
 
@@ -123,15 +123,11 @@ def newGame():
     user = findUser(email=email)
     if not user:
         # User doesn't exist
-        initials = getText(TEXTORIGIN_INPUTS, "Welcome, please type your initials")
-        print(initials)
-        if initials == "":
-            return
         userName = getText(TEXTORIGIN_INPUTS, "Please type your name")
         print(userName)
         if userName == "":
             return
-        user = User(userName, email, initials)
+        user = User(userName, email)
         user.save()
         getGame().setUser(user)
     else:
@@ -225,13 +221,14 @@ def run(gameName):
         glRotate(angles.getAngle(), 0, 0, -1)
         cube.render()
         glPopMatrix()
-        drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getAngle(), angles.tilt) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
+        if getGame().state != GAME_WAITING:
+            drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getAngle(), angles.tilt) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
-            drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
-            drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
             if getGame().state == GAME_WAITING:
-                drawText(TEXTORIGIN_GAMESCORE, TEXT_SPACEWAITING, 32, False)
+                drawText(TEXTORIGIN_GAMENAME1, TEXT_SPACEWAITING, 32, False)
             else:
+                drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
+                drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
                 drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
                 drawText(TEXTORIGIN_GAMETIME, "{:10.1f}".format(getGame().duration), 32, False)
         else:
