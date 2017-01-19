@@ -8,7 +8,7 @@ from client import getGame, resetGame
 
 LOCK_ANGLES = threading.Lock()
 
-ANGLE_COLORS = { 0: RGBA_GREEN, 1: RGBA_ORANGE, 10: RGBA_RED }
+ANGLE_COLORS = { 0: RGBA_BLACK, 1: RGBA_ORANGE, 10: RGBA_RED }
 ANGLE_SCORES = { 0: +0.1, 1: -0.1, 2: -0.2, 4: -0.3, 6: -0.4, 8: -0.5, 10: -0.6 }
 
 ANGLE_WAITTIME = 0.1

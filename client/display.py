@@ -39,7 +39,9 @@ TEXTORIGIN_GAMESCORE = (GRID_MAXX - 0.5,GRID_MINY - 0.36,GRID_MAXZ)
 TEXTORIGIN_GAMETIME = (GRID_MAXX - 0.5,GRID_MINY - 0.56,GRID_MAXZ)
 TEXTORIGIN_INPUTS = (0, 0.1, GRID_MAXZ/2)
 TEXTOFFSET_INPUTS = (0, -0.3, 0)
+LOGOORIGIN = (0,GRID_MAXY,GRID_MAXZ)
 TEXT_SPACEWAITING = "<C to calibrate, SPACE TO START GAME>"
+GUELOGO_PATH = "img/gue-logo.bmp"
 
 debug = True
 
@@ -72,7 +74,7 @@ def getScreenCoords(position):
     view = glGetIntegerv(GL_VIEWPORT)
     return gluProject(position[0], position[1], position[2], model, proj, view)
 
-def drawText(position, textString, size, centered = True, color = RGBA_WHITE, background = RGBA_BLACK):     
+def drawText(position, textString, size, centered = True, color = RGBA_BLACK, background = RGBA_WHITE):     
     font = pygame.font.Font (None, size)
     textSurface = font.render(textString, True, color, background)     
     textData = pygame.image.tostring(textSurface, "RGBA", True)
@@ -82,8 +84,22 @@ def drawText(position, textString, size, centered = True, color = RGBA_WHITE, ba
         textpos = (screenpos[0] - (textSurface.get_width()/2), screenpos[1], screenpos[2])
     else:
         textpos = (screenpos[0], screenpos[1], screenpos[2])
+    glEnable(GL_BLEND)
     glWindowPos3d(*textpos)     
     glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
+
+def drawLogo(position, centered = True):
+    img = pygame.image.load(GUELOGO_PATH)
+    img.convert()
+    imgData = pygame.image.tostring(img, "RGBA", True)
+    # Size is in window coordinates, so work in that system     
+    screenpos = getScreenCoords(position)
+    if centered:
+        imgpos = (screenpos[0] - (img.get_width()/2), screenpos[1], screenpos[2])
+    else:
+        imgpos = (screenpos[0], screenpos[1], screenpos[2])
+    glWindowPos3d(*imgpos)     
+    glDrawPixels(img.get_width(), img.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, imgData)
 
 def exit():
     pygame.quit()
@@ -152,7 +168,7 @@ def run(gameName):
     resize(*newsize)
     init()
     clock = pygame.time.Clock()
-    backdrop = Backdrop(COLOR_WHITE)
+    backdrop = Backdrop(COLOR_BLACK)
     cube = Cube((0.0, 0.0, 0.0), COLOR_BLUE)
 
     angles = Angles(SERVER_URL)
@@ -215,12 +231,14 @@ def run(gameName):
                 angles.setStartTime()
                 angles.unpause()
 
+        glClearColor(1.0, 1.0, 1.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
         glPushMatrix()
         glRotate(angles.getAngle(), 0, 0, -1)
         cube.render()
         glPopMatrix()
+        drawLogo(LOGOORIGIN)
         if getGame().state != GAME_WAITING:
             drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getAngle(), angles.tilt) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
