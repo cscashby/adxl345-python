@@ -74,7 +74,7 @@ def getScreenCoords(position):
     view = glGetIntegerv(GL_VIEWPORT)
     return gluProject(position[0], position[1], position[2], model, proj, view)
 
-def drawText(position, textString, size, centered = True, color = RGBA_BLACK, background = RGBA_WHITE):     
+def drawText(position, textString, size, centered = True, rightaligned = False, color = RGBA_BLACK, background = RGBA_WHITE):     
     font = pygame.font.Font (None, size)
     textSurface = font.render(textString, True, color, background)     
     textData = pygame.image.tostring(textSurface, "RGBA", True)
@@ -82,8 +82,11 @@ def drawText(position, textString, size, centered = True, color = RGBA_BLACK, ba
     screenpos = getScreenCoords(position)
     if centered:
         textpos = (screenpos[0] - (textSurface.get_width()/2), screenpos[1], screenpos[2])
-    else:
-        textpos = (screenpos[0], screenpos[1], screenpos[2])
+    else: 
+        if rightaligned:
+            textpos = (screenpos[0] - (textSurface.get_width()), screenpos[1], screenpos[2])
+        else:
+            textpos = (screenpos[0], screenpos[1], screenpos[2])
     glEnable(GL_BLEND)
     glWindowPos3d(*textpos)     
     glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
@@ -247,8 +250,8 @@ def run(gameName):
             else:
                 drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
                 drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)
-                drawText(TEXTORIGIN_GAMESCORE, "{:10.1f}".format(getGame().score), 32, False)
-                drawText(TEXTORIGIN_GAMETIME, "{:10.1f}".format(getGame().duration), 32, False)
+                drawText(TEXTORIGIN_GAMESCORE, "Score: {:10.1f}".format(getGame().score), 32, rightaligned = True)
+                drawText(TEXTORIGIN_GAMETIME, "Time: {:10.1f}".format(getGame().duration), 32, rightaligned = True)
         else:
             drawText(TEXTORIGIN_GAMENAME1, TEXT_NOGAME[0], 32, False)
             drawText(TEXTORIGIN_GAMENAME2, TEXT_NOGAME[1], 32, False)
