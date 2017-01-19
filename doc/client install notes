@@ -1,0 +1,4 @@
+sudo apt-get install raspberrypi-ui-mods screen vim build-essential git i2c-tools python-smbus wiringpi python-pygame python-opengl python-pysqlite2 python-numpy python-webpy
+sudo apt-get install vlan isc-dhcp-server 
+
+echo 8021q | sudo tee --append /etc/modules

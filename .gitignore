@@ -1,3 +1,5 @@
 *.pyc
 db/*.db
 db/*.db-journal
+UpgradeLog.htm
+Backup/

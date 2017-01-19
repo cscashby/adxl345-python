@@ -191,6 +191,8 @@ def run(gameName):
                 angles.pause()
                 newGame()
                 angles.unpause()
+            if event.type == KEYDOWN and event.key == K_c:
+                angles.calibrate()
             if getGame().state == GAME_RUNNING and event.type == KEYDOWN and event.key == K_SPACE:
                 angles.pause()
                 # Space ends the current game and records the score
@@ -220,10 +222,10 @@ def run(gameName):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
         glPushMatrix()
-        glRotate(angles.y, 0, 0, -1)
+        glRotate(angles.getAngle(), 0, 0, -1)
         cube.render()
         glPopMatrix()
-        drawText(TEXTORIGIN_ANGLE, "%.2f" % angles.tilt + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
+        drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getAngle(), angles.tilt) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
             drawText(TEXTORIGIN_GAMENAME1, getGame().user.userName, 32, False)
             drawText(TEXTORIGIN_GAMENAME2, getGame().user.initials, 32, False)

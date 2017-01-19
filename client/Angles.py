@@ -17,11 +17,13 @@ class Angles(threading.Thread):
     # TODO: Handle timeouts better - currently if the server has hung then the app hangs...
     def __init__( self, url ):
         threading.Thread.__init__(self)
+        self.calibrate_angle = 0.0
         self.link = url
         self.daemon = True
         self.update()
         self.paused = False
         self.setStartTime()
+        self.tilt = 0
 
     def run(self):
         while True:
@@ -55,15 +57,21 @@ class Angles(threading.Thread):
 
     def getColor(self):
         for angle, color in iter(sorted(ANGLE_COLORS.iteritems(), reverse=True)):
-            if self.tilt >= angle:
+            if self.getAngle() >= angle:
                 return color
         return RGBA_WHITE
 
     def getScore(self):
         for angle, score in iter(sorted(ANGLE_SCORES.iteritems(), reverse=True)):
-            if self.tilt >= angle:
+            if self.getAngle() >= angle:
                 return score
         return 0
+
+    def calibrate(self):
+        self.calibrate_angle = self.tilt
+
+    def getAngle(self):
+        return self.tilt - self.calibrate_angle
 
     def isPaused(self):
         return self.paused
