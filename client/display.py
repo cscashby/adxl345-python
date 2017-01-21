@@ -238,12 +238,12 @@ def run(gameName):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         backdrop.render()
         glPushMatrix()
-        glRotate(angles.getAngle(), 0, 0, -1)
+        glRotate(angles.getY(), 0, 0, -1)
         cube.render()
         glPopMatrix()
         drawLogo(LOGOORIGIN)
         if getGame().state != GAME_WAITING:
-            drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getAngle(), angles.tilt) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
+            drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (abs(angles.getTilt()), abs(angles.tilt)) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
             if getGame().state == GAME_WAITING:
                 drawText(TEXTORIGIN_GAMENAME1, TEXT_SPACEWAITING, 32, False)
