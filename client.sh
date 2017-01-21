@@ -1,4 +1,4 @@
 #!/bin/bash
 
-client.py `date +%a%d`
+./client.py `date +%a%d`
 
