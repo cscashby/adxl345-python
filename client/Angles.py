@@ -39,8 +39,7 @@ class Angles(threading.Thread):
         angles = myfile.split(" ")
         self.x = float(angles[0])
         self.y = float(angles[1])
-        # This version is for constrained tilt (i.e. pitch only)
-        self.tilt = abs(float(angles[1]))
+        self.tilt = self.y
         #print "Tilt: %.2f" % self.tilt
         if getGame().state == Game.GAME_RUNNING:
             getGame().score = getGame().score + Game.SCORE_TIMEADDITION
@@ -58,7 +57,7 @@ class Angles(threading.Thread):
 
     def getColor(self):
         for angle, color in iter(sorted(ANGLE_COLORS.iteritems(), reverse=True)):
-            if abs(self.getTilt()) >= angle:
+            if self.getTilt() >= angle:
                 return color
         return RGBA_WHITE
 
@@ -73,7 +72,7 @@ class Angles(threading.Thread):
         self.calibrate_y = self.y
 
     def getTilt(self):
-        return self.tilt - self.calibrate_tilt
+        return abs(self.tilt - self.calibrate_tilt)
 
     def getY(self):
         return self.y - self.calibrate_y

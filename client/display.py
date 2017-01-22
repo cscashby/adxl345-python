@@ -243,7 +243,10 @@ def run(gameName):
         glPopMatrix()
         drawLogo(LOGOORIGIN)
         if getGame().state != GAME_WAITING:
-            drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (abs(angles.getTilt()), abs(angles.tilt)) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
+#            if debug:
+#                print("getY %.2f Y %.2f calibrate_y %.2f" % (angles.getY(), angles.y, angles.calibrate_y))
+#                print("getTilt %.2f Tilt %.2f calibrate_tilt %.2f" % (angles.getTilt(), angles.tilt, angles.calibrate_tilt))
+            drawText(TEXTORIGIN_ANGLE, "%.2f (%.2f)" % (angles.getTilt(), abs(angles.tilt)) + u'\N{DEGREE SIGN}', 64, color = angles.getColor())
         if getGame().state != GAME_NONE:
             if getGame().state == GAME_WAITING:
                 drawText(TEXTORIGIN_GAMENAME1, TEXT_SPACEWAITING, 32, False)
